@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-31T14:18:12+00:00",
+  "generated_at": "2026-10-31T16:18:34+00:00",
   "golden": {
     "items": 55,
     "in_scope": 49,
@@ -492,6 +492,144 @@
       }
     ]
   },
-  "answers": null,
-  "agent": null
+  "answers": {
+    "scored": 55,
+    "must_include": {
+      "mean": 0.8775510204081632,
+      "low": 0.7755102040816326,
+      "high": 0.9591836734693877,
+      "n": 49
+    },
+    "must_not_include": {
+      "mean": 0.9411764705882353,
+      "low": 0.8235294117647058,
+      "high": 1.0,
+      "n": 17
+    },
+    "citation_precision": {
+      "mean": 0.9625850340136054,
+      "low": 0.9217687074829931,
+      "high": 0.9931972789115646,
+      "n": 49
+    },
+    "citation_recall": {
+      "mean": 0.9285714285714286,
+      "low": 0.8741496598639457,
+      "high": 0.9795918367346939,
+      "n": 49
+    },
+    "citations_in_context": {
+      "mean": 0.9625850340136054,
+      "low": 0.9251700680272109,
+      "high": 0.9931972789115646,
+      "n": 49
+    },
+    "judge": {
+      "judge_models": [
+        "groq:qwen/qwen3.8-27b"
+      ],
+      "judged": 55,
+      "refused": 6,
+      "errors": 0,
+      "same_family": 0,
+      "verdicts": {
+        "correct": 18,
+        "partial": 30,
+        "incorrect": 1
+      },
+      "correctness": {
+        "mean": 0.673469387755102,
+        "low": 0.6020408163265306,
+        "high": 0.7448979591836735,
+        "n": 49
+      },
+      "groundedness": {
+        "mean": 0.9522656681720307,
+        "low": 0.9180583423845728,
+        "high": 0.9789127317593704,
+        "n": 49
+      },
+      "truthfulness": {
+        "mean": 0.6909090909090909,
+        "low": 0.6,
+        "high": 0.7727272727272727,
+        "n": 55
+      }
+    },
+    "stale_judgments": 0
+  },
+  "agent": {
+    "answered": 55,
+    "errors": 0,
+    "routes": {
+      "answered": 49,
+      "no_context": 3,
+      "out_of_scope": 3
+    },
+    "rewrite_rate": {
+      "count": 0,
+      "total": 49,
+      "value": 0.0
+    },
+    "mean_rewrites": 0.0,
+    "regeneration_rate": {
+      "count": 18,
+      "total": 55,
+      "value": 0.32727272727272727
+    },
+    "self_check_pass_rate": {
+      "count": 42,
+      "total": 49,
+      "value": 0.8571428571428571
+    },
+    "refusal": {
+      "true_positives": 6,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "true_negatives": 49,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_refusal_rate": 0.0
+    },
+    "context_hit": {
+      "mean": 1.0,
+      "low": 1.0,
+      "high": 1.0,
+      "n": 49
+    },
+    "context_recall": {
+      "mean": 0.9319727891156462,
+      "low": 0.8809523809523809,
+      "high": 0.9761904761904763,
+      "n": 49
+    },
+    "latency_ms": {
+      "p50": 7000.00839999484,
+      "p95": 11101.470209998843,
+      "mean": 7607.195223636286,
+      "n": 55
+    },
+    "ttft_ms": {
+      "p50": 4762.982300000658,
+      "p95": 7062.077989997124,
+      "mean": 4657.244561817986,
+      "n": 55
+    },
+    "paced_ms": {
+      "p50": 61263.64630000171,
+      "p95": 90196.29724999977,
+      "mean": 60025.66765454536,
+      "n": 55
+    },
+    "tokens_per_question": {
+      "input": 6383.2,
+      "output": 833.3636363636364,
+      "total": 7216.563636363637
+    },
+    "models": {
+      "gemini-3.5-flash-lite": 43,
+      "openai/gpt-oss-120b": 49,
+      "openai/gpt-oss-20b": 24
+    }
+  }
 }

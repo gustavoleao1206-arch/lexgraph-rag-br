@@ -205,10 +205,38 @@ tempo até o primeiro token. Duas camadas avaliam as respostas:
   fundamentação, a parcela das afirmações apoiada pelos trechos citados. O juiz é um modelo
   diferente dos que escrevem as respostas, para reduzir o viés de autoavaliação.
 
+Resultados nas 55 perguntas. O agente rodou com seus modelos padrão (`gpt-oss-120b` nas
+respostas, Gemini como reserva) e o juiz foi o `qwen3.8-27b`, de uma família de modelos que o
+agente nunca usa:
+
+| Métrica | Resultado |
+|---|---:|
+| Perguntas fora do escopo recusadas (precisão / cobertura) | 1,00 / 1,00, nenhuma pergunta válida recusada |
+| Artigo esperado chegou ao modelo da resposta | 1,00 (49 de 49) |
+| Fatos obrigatórios presentes | 0,88 [0,78; 0,96] |
+| Afirmações proibidas evitadas | 0,94 [0,82; 1,00] |
+| Precisão / cobertura das citações | 0,96 / 0,93 |
+| Fundamentação (juiz) | **0,95** [0,92; 0,98] |
+| Correção (juiz: 1 correta, 0,5 parcial, 0 incorreta) | 0,67 [0,60; 0,74] |
+| Latência p50 / p95, tempo até o primeiro token p50 | 7,0 s / 11,1 s, 4,8 s |
+
+- **As respostas ficam dentro das fontes.** 95% das afirmações são sustentadas pelos trechos
+  citados, e o agente recusou todas as perguntas fora do escopo sem recusar nenhuma válida.
+- **A completude é o ponto fraco.** O juiz classificou 18 respostas como corretas, 30 como
+  parciais e 1 como incorreta. Só 3 contradizem a resposta de referência; as demais parciais
+  deixam de fora alguns dos seus pontos, como uma exceção secundária, provavelmente um custo
+  das respostas curtas (cerca de 250 palavras) escritas a partir de cinco trechos.
+- As latências não incluem as esperas impostas pelos limites das camadas gratuitas (cerca de
+  um minuto por pergunta nesta execução). Quando o limite diário de tokens do Groq acabou,
+  parte das chamadas do agente passou para o Gemini, como previsto.
+
 Para reproduzir: `uv run lexgraph eval retrieval`, `uv run lexgraph eval answers`,
 `uv run lexgraph eval judge` e `uv run lexgraph eval report`; os resultados ficam em
 [`reports/eval`](reports/eval). Defina `LEXGRAPH_JUDGE_MODEL` (ou passe `--judge-model`) para
-escolher outro juiz.
+escolher outro juiz: os resultados acima usaram `--judge-model groq:qwen/qwen3.8-27b`, porque a
+camada gratuita do juiz padrão, o Gemini 3.8 Flash, permite 20 requisições por dia, menos do que
+o golden set exige. Os vereditos ficam em cache em `reports/eval/judge_cache.jsonl`, então
+julgar as mesmas respostas de novo não gasta tokens.
 
 ## API
 

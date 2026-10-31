@@ -200,10 +200,38 @@ Two layers score the answers:
   groundedness, the share of claims supported by the cited passages. The judge is a different
   model from the ones that write the answers, to limit self-preference bias.
 
+Results on the 55 questions. The agent ran with its default models (`gpt-oss-120b` for the
+answers, Gemini as fallback) and the judge was `qwen3.8-27b`, from a model family the agent
+never uses:
+
+| Metric | Result |
+|---|---:|
+| Out-of-scope questions declined (precision / recall) | 1.00 / 1.00, no in-scope question refused |
+| Expected article reached the answer model | 1.00 (49 of 49) |
+| Required facts present | 0.88 [0.78, 0.96] |
+| Forbidden claims avoided | 0.94 [0.82, 1.00] |
+| Citation precision / recall | 0.96 / 0.93 |
+| Groundedness (judge) | **0.95** [0.92, 0.98] |
+| Correctness (judge: 1 correct, 0.5 partial, 0 incorrect) | 0.67 [0.60, 0.74] |
+| Latency p50 / p95, time to first token p50 | 7.0 s / 11.1 s, 4.8 s |
+
+- **Answers stay within their sources.** 95% of their claims are supported by the cited
+  passages, and the agent declined every out-of-scope question without refusing an in-scope one.
+- **Completeness is the weak spot.** The judge rated 18 answers correct, 30 partial and 1
+  incorrect. Only 3 contradict the reference answer; the other partial ones leave out some of
+  its points, such as a secondary exception, likely a cost of the short answers (about 250
+  words) built from five passages.
+- Latencies leave out the waits imposed by the free tiers' rate limits (about a minute per
+  question in this run). When Groq's daily token limit ran out, part of the agent's calls
+  fell back to Gemini, as designed.
+
 Reproduce with `uv run lexgraph eval retrieval`, `uv run lexgraph eval answers`,
 `uv run lexgraph eval judge` and `uv run lexgraph eval report`; results land in
 [`reports/eval`](reports/eval). Set `LEXGRAPH_JUDGE_MODEL` (or pass `--judge-model`) to choose
-another judge.
+another judge: the results above used `--judge-model groq:qwen/qwen3.8-27b`, because the free
+tier of the default judge, Gemini 3.8 Flash, allows 20 requests a day, fewer than the golden set
+needs. Verdicts are cached in `reports/eval/judge_cache.jsonl`, so judging the same answers
+again costs no tokens.
 
 ## API
 

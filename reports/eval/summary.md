@@ -47,4 +47,40 @@ Unit recall@10 (questions that need a specific inciso or paragraph of a long art
 | `dense+analyzer` | 8 | 0.69 [0.38, 1.00] |
 | `hybrid+analyzer` | 8 | 0.75 [0.38, 1.00] |
 
-_Generated 2026-10-31T14:18:12+00:00. Values in brackets are 95% bootstrap confidence intervals over questions._
+## Answer quality
+
+| Metric | Mean [95% CI] | n |
+|---|---:|---:|
+| Required facts present (must_include) | 0.88 [0.78, 0.96] | 49 |
+| Forbidden claims avoided (must_not_include) | 0.94 [0.82, 1.00] | 17 |
+| Citation precision | 0.96 [0.92, 0.99] | 49 |
+| Citation recall | 0.93 [0.87, 0.98] | 49 |
+| Citations within the given sources | 0.96 [0.93, 0.99] | 49 |
+| Correctness of non-refused answers (judge: 1, 0.5, 0) | 0.67 [0.60, 0.74] | 49 |
+| Groundedness (judge: share of supported claims) | 0.95 [0.92, 0.98] | 49 |
+| Truthfulness (CRAG: 1, 0.5, 0, -1) | 0.69 [0.60, 0.77] | 55 |
+
+Judge `groq:qwen/qwen3.8-27b`: correct 18, partial 30, incorrect 1; 6 refusal(s) not judged; 0 error(s); 0 answer(s) produced with a model of the judge's family.
+
+## Agent behavior
+
+| Metric | Value |
+|---|---:|
+| Questions answered | 55 (0 errors) |
+| Routes | answered 49, no_context 3, out_of_scope 3 |
+| Rewrite rate (in scope) | 0.00 (0/49) |
+| Mean rewrites (in scope) | 0.00 |
+| Regeneration rate | 0.33 (18/55) |
+| Self-check pass rate | 0.86 (42/49) |
+| Expected article in the context (in scope) | 1.00 [1.00, 1.00] |
+| Expected articles in the context, recall (in scope) | 0.93 [0.88, 0.98] |
+| Refusal precision | 1.00 (6/6) |
+| Refusal recall | 1.00 (6/6) |
+| False refusal rate (in scope) | 0.00 (0/49) |
+| Latency p50 / p95 (ms) | 7000 / 11101 |
+| Time to first token p50 / p95 (ms) | 4763 / 7062 |
+| Rate-limit pacing left out of the two timings above, p50 / p95 (ms) | 61264 / 90196 |
+| Tokens per question (input / output / total) | 6383 / 833 / 7217 |
+| Models | gemini-3.5-flash-lite 43, openai/gpt-oss-120b 49, openai/gpt-oss-20b 24 |
+
+_Generated 2026-10-31T16:18:34+00:00. Values in brackets are 95% bootstrap confidence intervals over questions._
