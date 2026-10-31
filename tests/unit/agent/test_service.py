@@ -315,7 +315,7 @@ async def test_runs_on_the_same_thread_take_turns(
         log.append(f"início: {asked(messages)}")
         await asyncio.sleep(0.01)
         log.append(f"fim: {asked(messages)}")
-        return AIMessage(f"Resposta a {asked(messages)}")
+        return AIMessage(f"Resposta a {asked(messages)} [1]")
 
     service = make_service(make_context(retriever, answerer=RunnableLambda(slow_answer)), settings)
     first = ChatRequest(question="Pergunta um?", thread_id="conversa")
@@ -329,13 +329,16 @@ async def test_runs_on_the_same_thread_take_turns(
         "início: Pergunta dois?",
         "fim: Pergunta dois?",
     ]
-    assert (one.answer, two.answer) == ("Resposta a Pergunta um?", "Resposta a Pergunta dois?")
+    assert (one.answer, two.answer) == (
+        "Resposta a Pergunta um? [1]",
+        "Resposta a Pergunta dois? [1]",
+    )
     history = await service.history("conversa")
     assert [message.content for message in history] == [
         "Pergunta um?",
-        "Resposta a Pergunta um?",
+        "Resposta a Pergunta um? [1]",
         "Pergunta dois?",
-        "Resposta a Pergunta dois?",
+        "Resposta a Pergunta dois? [1]",
     ]
 
 

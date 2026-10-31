@@ -437,6 +437,22 @@ async def test_verify_turns_unsupported_claims_into_feedback(retriever: FakeRetr
     }
 
 
+async def test_an_answer_that_cites_no_source_is_written_again(retriever: FakeRetriever) -> None:
+    runtime, _ = make_runtime(make_context(retriever, verifier=Script(grounded()).runnable))
+    state = make_state(answer="Ficam 24 dias de férias.", context=dumped(CLT_58))
+
+    update = await nodes.verify(state, runtime)
+
+    # Not an unsupported claim: the grounding stands, the regeneration is asked to cite.
+    assert update == {
+        "grounding": {"grounded": True, "unsupported_claims": []},
+        "feedback": [prompts.MISSING_CITATIONS],
+    }
+    assert nodes.route_after_verify(make_state(generation_count=1, **update), runtime) == "generate"
+    without_sources = make_state(answer="Os trechos não tratam disso.", context=[])
+    assert (await nodes.verify(without_sources, runtime))["feedback"] == []
+
+
 async def test_verify_leaves_the_answer_unverified_when_the_model_fails(
     retriever: FakeRetriever,
 ) -> None:

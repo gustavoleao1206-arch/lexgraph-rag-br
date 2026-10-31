@@ -31,6 +31,7 @@ from langgraph.types import Command
 
 from lexgraph.agent import prompts
 from lexgraph.agent.citations import (
+    cited_indices,
     dangling_indices,
     drop_dangling_markers,
     normalize_markers,
@@ -447,12 +448,16 @@ async def verify(state: GraphState, runtime: Runtime[AgentContext]) -> dict[str,
     """Check that every legal claim of the answer is supported by its sources.
 
     Markers that point at no source are found without the model, so they become feedback
-    for a regeneration even when the check fails (the answer then stays unverified).
+    for a regeneration even when the check fails (the answer then stays unverified). So does
+    an answer that cites none of its sources, such as one written after a message asked it
+    not to cite; that is no unsupported claim, since the answer may say that the sources do
+    not cover the question.
     """
     _status(runtime, "verify", prompts.STATUS_VERIFY)
     passages = _passages(state["context"])
     answer = state["answer"]
     dangling = [prompts.dangling_marker_claim(n) for n in dangling_indices(answer, len(passages))]
+    uncited = [prompts.MISSING_CITATIONS] if passages and not cited_indices(answer) else []
     claims: list[str] | None
     try:
         check = await runtime.context.verifier.ainvoke(prompts.verifier_messages(answer, passages))
@@ -464,7 +469,8 @@ async def verify(state: GraphState, runtime: Runtime[AgentContext]) -> dict[str,
     if dangling and not _within_regeneration_budget(state, runtime):
         # Last pass: markers that point at no source are removed instead of shown to users.
         return _without_dangling_markers(state, claims)
-    return {"grounding": _grounding(claims), "feedback": dangling if claims is None else claims}
+    feedback = (dangling if claims is None else claims) + uncited
+    return {"grounding": _grounding(claims), "feedback": feedback}
 
 
 def respond(state: GraphState, runtime: Runtime[AgentContext]) -> dict[str, Any]:

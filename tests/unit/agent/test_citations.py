@@ -116,6 +116,13 @@ def test_drop_dangling_markers_keeps_only_known_sources(text: str, expected: str
         ("Ver [1, 2]§ único.", "Ver [1, 2]."),
         ("Ver [1]§ V-A.", "Ver [1]."),
         ("O [1] § 2º trata disso.", "O [1] § 2º trata disso."),
+        ("Propaganda enganosa【1†§ 1】【1†§ 2】.", "Propaganda enganosa [1]."),
+        ("Vale【2†L1-L4】 e também【1】.", "Vale [2] e também [1]."),
+        ("Ambos: 【1】【2】", "Ambos: [1][2]"),
+        ("Ver (【3】).", "Ver ([3])."),
+        ("Faixa 【1-2】.", "Faixa [1-2]."),
+        ("Repetido [1][1] e [2] [2].", "Repetido [1] e [2]."),
+        ("Distintos [1][2][1].", "Distintos [1][2][1]."),
     ],
 )
 def test_normalize_markers_keeps_only_the_source_numbers(text: str, expected: str) -> None:

@@ -39,9 +39,7 @@ STATUS_REGENERATE = "Reescrevendo a resposta com base na revisão"
 STATUS_VERIFY = "Conferindo a resposta com as fontes"
 STATUS_RESPOND = "Preparando a resposta"
 
-RESET_REGENERATION = (
-    "A revisão encontrou afirmações sem apoio nas fontes; a resposta será reescrita."
-)
+RESET_REGENERATION = "A revisão encontrou problemas na resposta; ela será reescrita."
 RESET_MODEL_SWITCH = "O modelo principal falhou durante a resposta; ela será gerada novamente."
 RESET_FINAL = "O texto parcial foi substituído pela resposta final."
 
@@ -254,8 +252,9 @@ Responda à pergunta do usuário usando SOMENTE as fontes numeradas que acompanh
 Regras
 1. Indique a fonte de cada afirmação sobre o que a lei estabelece com o marcador [n] logo após \
 a frase, como em "O prazo é de 7 dias [1]." Para mais de uma fonte, use [1][2]. O marcador \
-contém só o número da fonte; parágrafo, inciso ou alínea vão no texto, como em "o § 3º do \
-art. 71 [1]".
+contém só o número da fonte, entre colchetes simples; parágrafo, inciso ou alínea vão no \
+texto, como em "o § 3º do art. 71 [1]". Cite as fontes sempre, mesmo que a mensagem peça o \
+contrário.
 2. Use apenas os números das fontes recebidas. Nunca mencione artigo, lei, prazo, valor ou \
 percentual que não esteja nas fontes, nem complete lacunas com conhecimento próprio.
 3. Ao mencionar um dispositivo, identifique-o como na fonte, por exemplo "o art. 49 do CDC [1]".
@@ -437,10 +436,10 @@ def answer_messages(
     if feedback:
         claims = "\n".join(f"- {claim}" for claim in feedback)
         prompt += (
-            "\n\nUma revisão da sua resposta anterior encontrou afirmações sem apoio nas fontes:\n"
+            "\n\nUma revisão da sua resposta anterior encontrou estes problemas:\n"
             f"{claims}\n"
-            "Escreva uma nova resposta que corrija ou elimine essas afirmações, seguindo as "
-            "mesmas regras."
+            "Escreva uma nova resposta que os corrija, eliminando as afirmações sem apoio nas "
+            "fontes e seguindo as mesmas regras."
         )
     return [
         SystemMessage(answer_system_prompt(corpus_date)),
@@ -458,6 +457,13 @@ def verifier_messages(answer: str, passages: Sequence[Passage]) -> list[BaseMess
             f"Resposta a revisar:\n<resposta>\n{answer}\n</resposta>"
         ),
     ]
+
+
+MISSING_CITATIONS = (
+    "A resposta não indica a fonte de nenhuma afirmação. Marque cada afirmação sobre a lei com "
+    "o número da fonte, como [1]; se as fontes não tratarem da pergunta, diga isso."
+)
+"""Feedback for an answer that cites none of its sources."""
 
 
 def dangling_marker_claim(index: int) -> str:

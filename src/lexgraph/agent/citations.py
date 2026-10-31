@@ -61,17 +61,30 @@ _UNIT_LABEL = r"(?:\d{1,3}\s*[º°o]?|[IVXLCDM]+(?:-[A-Z])?\b|[úu]nico\b)"
 _GLUED_UNIT_RE = re.compile(
     r"(" + _MARKER_RE.pattern + r")§+\s*" + _UNIT_LABEL + r"(?:\s*(?:,|e)\s*" + _UNIT_LABEL + r")*"
 )
+# gpt-oss's own citation style: "【1】", "【1†§ 1】", "【2†L1-L4】" (lenticular brackets).
+_LENTICULAR_MARKER_RE = re.compile(r"(\S?)【\s*(" + _NUMBERS + r")\s*(?:†[^】]*)?】")
+_REPEATED_MARKER_RE = re.compile(r"\[(\d{1,2})\](?:\s*\[\1\])+")
+
+
+def _lenticular(match: re.Match[str]) -> str:
+    before = match.group(1)
+    space = " " if before and before not in "([]" else ""
+    return f"{before}{space}[{match.group(2)}]"
 
 
 def normalize_markers(text: str) -> str:
-    """Reduce markers that also name a unit to their source numbers.
+    """Reduce markers to their source numbers, in the ``[n]`` style.
 
     ``[1§ 3]`` and ``[2, inciso IV]`` become ``[1]`` and ``[2]``; ``[1, 2, parágrafo único]``
     becomes ``[1, 2]``, and ``[2]§ XVII``, with the paragraph glued after the marker, becomes
     ``[2]``. Models sometimes write the paragraph in or next to the marker; the unit is
-    already in the source's citation, and only the numbers link the sentence to it.
+    already in the source's citation, and only the numbers link the sentence to it. The
+    lenticular markers that gpt-oss writes on its own (``consumidor【1†§ 1】``) become ``[1]``
+    too, after a space, and a marker repeated right after itself (``[1][1]``) is kept once.
     """
-    return _GLUED_UNIT_RE.sub(r"\1", _DETAILED_MARKER_RE.sub(r"[\1]", text))
+    text = _LENTICULAR_MARKER_RE.sub(_lenticular, text)
+    text = _GLUED_UNIT_RE.sub(r"\1", _DETAILED_MARKER_RE.sub(r"[\1]", text))
+    return _REPEATED_MARKER_RE.sub(r"[\1]", text)
 
 
 def drop_dangling_markers(text: str, n_sources: int) -> str:
