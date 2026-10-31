@@ -7,10 +7,16 @@ import pytest
 
 from lexgraph.config import Settings
 from lexgraph.domain import Article, Chunk, LawId
+from lexgraph.retrieval.store import probe_sqlite_threading
 
 # Model downloads on Windows emit a symlink warning, which the strict warning filter turns
 # into an error; it is irrelevant for the tests.
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+# Typer renders help and usage errors in color when GITHUB_ACTIONS is set, and the escape
+# codes split option names; the tests read the same plain text everywhere.
+os.environ.setdefault("_TYPER_FORCE_DISABLE_TERMINAL", "1")
+# Some tests open embedded Qdrant directly rather than through create_qdrant_client.
+probe_sqlite_threading()
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

@@ -7,7 +7,6 @@ dozen lines of the page named by its prefix, cut around one defect the parser wo
 from pathlib import Path
 
 import pytest
-from bs4 import BeautifulSoup
 
 from lexgraph.catalog import SOURCES, SourcePage
 from lexgraph.domain import Article, LawId
@@ -231,9 +230,7 @@ def test_cf_page_switches_to_the_adct() -> None:
 
 
 def test_premature_document_end_does_not_truncate_the_page() -> None:
-    raw = (FIXTURES / "cf88_base_premature_end.html").read_bytes()
-    assert "Art. 25" not in BeautifulSoup(raw.decode("cp1252"), "lxml").get_text()
-
+    # The page closes its document before art. 25; some libxml2 builds stop parsing there.
     cf = parse_fixture("cf88_base_premature_end.html")[LawId.CF]
 
     assert numbers(cf) == ["24", "25"]
