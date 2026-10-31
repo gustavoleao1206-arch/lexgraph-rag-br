@@ -1,0 +1,13 @@
+# Normalize line endings: LF in the repository and in working trees, so shell
+# scripts and Docker builds behave the same on Windows, Linux and CI.
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary

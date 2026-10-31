@@ -1,0 +1,53 @@
+# Install the hooks once with `uv run pre-commit install`;
+# check every file with `uv run pre-commit run --all-files`.
+#
+# Ruff and mypy run from the project environment, so their versions come from uv.lock, as in
+# CI (Dependabot updates the lock), and uv is the developer's own (pyproject sets the minimum).
+# Only the generic file checks below are pinned here, to the commit of a release tag (a tag can
+# be moved): `uv run pre-commit autoupdate --freeze` bumps them and notes the tag.
+minimum_pre_commit_version: "4.0.0"
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=6000"]
+      - id: detect-private-key
+      # Generated data and byte-exact parser fixtures are left as they are.
+      - id: end-of-file-fixer
+        exclude: ^(data|reports|tests/fixtures)/
+      - id: trailing-whitespace
+        args: ["--markdown-linebreak-ext=md"]
+        exclude: ^(data|reports|tests/fixtures)/
+
+  - repo: local
+    hooks:
+      - id: uv-lock
+        name: uv lock
+        entry: uv lock
+        language: system
+        files: ^(uv\.lock|pyproject\.toml)$
+        pass_filenames: false
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --all-extras ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --all-extras ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+      - id: mypy
+        name: mypy
+        entry: uv run --all-extras mypy
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
+        require_serial: true

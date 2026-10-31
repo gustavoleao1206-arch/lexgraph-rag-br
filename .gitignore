@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Local runtime data
+data/qdrant/
+data/checkpoints/
+*.sqlite
+*.sqlite-*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Downloaded source pages and model weights (rebuilt by `lexgraph fetch` / scripts/download_models.py)
+data/raw/
+data/models/
