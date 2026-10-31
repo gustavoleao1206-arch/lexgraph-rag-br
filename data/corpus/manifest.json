@@ -1,0 +1,78 @@
+{
+  "generated_at": "2026-10-31T13:19:42+00:00",
+  "parser_version": "1.1.1",
+  "laws": {
+    "CLT": {
+      "law_id": "CLT",
+      "source": "clt",
+      "source_url": "https://www.planalto.gov.br/ccivil_03/decreto-lei/del5452compilado.htm",
+      "source_sha256": "b66412ccccaabac8eca29d1ef8fc2ce7e933c8f8f7a51d3d921bafa82680da27",
+      "last_modified": "Fri, 09 Oct 2026 16:17:05 GMT",
+      "fetched_at": "2026-10-30T14:29:32+00:00",
+      "articles": 1027,
+      "in_force": 841,
+      "revoked": 182,
+      "vetoed": 4
+    },
+    "CDC": {
+      "law_id": "CDC",
+      "source": "cdc",
+      "source_url": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
+      "source_sha256": "f2c69a59f768b430d7e55f61c66381b5d8b74b8eddfc1caef0c037e76a0777b0",
+      "last_modified": "Tue, 13 Oct 2026 09:50:35 GMT",
+      "fetched_at": "2026-10-30T14:29:35+00:00",
+      "articles": 130,
+      "in_force": 118,
+      "revoked": 0,
+      "vetoed": 12
+    },
+    "LGPD": {
+      "law_id": "LGPD",
+      "source": "lgpd",
+      "source_url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm",
+      "source_sha256": "f7c3ef6f394fdd52bbe9d8a94f9a8b6fcee87d0d7c44ba79a99d476625259c9e",
+      "last_modified": "Thu, 23 Apr 2026 23:33:33 GMT",
+      "fetched_at": "2026-10-30T14:29:38+00:00",
+      "articles": 80,
+      "in_force": 73,
+      "revoked": 1,
+      "vetoed": 6
+    },
+    "MCI": {
+      "law_id": "MCI",
+      "source": "marco-civil",
+      "source_url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm",
+      "source_sha256": "9b45946b58caffe6f65ba92d9b3b3e57fb3ac63a84f5a259d856da9e3b0b7441",
+      "last_modified": "Thu, 23 Apr 2026 23:32:39 GMT",
+      "fetched_at": "2026-10-30T16:00:48+00:00",
+      "articles": 32,
+      "in_force": 32,
+      "revoked": 0,
+      "vetoed": 0
+    },
+    "CF": {
+      "law_id": "CF",
+      "source": "cf88",
+      "source_url": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicaocompilado.htm",
+      "source_sha256": "92724854bfc43318034f314c59efd36179898a97a42f507ab5f88460fc2cecb7",
+      "last_modified": "Mon, 19 Oct 2026 16:20:10 GMT",
+      "fetched_at": "2026-10-30T14:29:45+00:00",
+      "articles": 277,
+      "in_force": 274,
+      "revoked": 3,
+      "vetoed": 0
+    },
+    "ADCT": {
+      "law_id": "ADCT",
+      "source": "cf88",
+      "source_url": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicaocompilado.htm",
+      "source_sha256": "92724854bfc43318034f314c59efd36179898a97a42f507ab5f88460fc2cecb7",
+      "last_modified": "Mon, 19 Oct 2026 16:20:10 GMT",
+      "fetched_at": "2026-10-30T14:29:45+00:00",
+      "articles": 148,
+      "in_force": 138,
+      "revoked": 10,
+      "vetoed": 0
+    }
+  }
+}
