@@ -1,0 +1,40 @@
+# Streamlit settings for the LexGraph interface. Streamlit reads this file from the working
+# directory, so start the interface from the repository root (`lexgraph ui`).
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+showErrorDetails = "type"
+
+[theme]
+font = "sans-serif"
+headingFont = "serif"
+baseRadius = "medium"
+showWidgetBorder = true
+linkUnderline = false
+
+[theme.light]
+primaryColor = "#1F4E8C"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F6FA"
+textColor = "#1B2430"
+borderColor = "#DCE3EC"
+linkColor = "#1F5FAD"
+blueColor = "#1F5FAD"
+
+[theme.light.sidebar]
+backgroundColor = "#F3F6FA"
+
+[theme.dark]
+primaryColor = "#3D6FB6"
+backgroundColor = "#0F1720"
+secondaryBackgroundColor = "#18222E"
+textColor = "#E6EDF5"
+borderColor = "#2A3646"
+linkColor = "#8DB4EA"
+blueColor = "#8DB4EA"
+
+[theme.dark.sidebar]
+backgroundColor = "#131C27"
