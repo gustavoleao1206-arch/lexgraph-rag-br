@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # Same version as the uv image of the Dockerfile (tests/unit/devops/test_versions.py).
+  UV_VERSION: "0.13.6"
+
+jobs:
+  quality:
+    name: Lint and type check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --locked --all-extras
+      - name: Check formatting
+        run: uv run --no-sync ruff format --check
+      - name: Lint
+        run: uv run --no-sync ruff check --output-format=github
+      - name: Type check
+        run: uv run --no-sync mypy
+
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync --locked --all-extras
+      # pyproject's addopts leave out the integration tests (downloaded models) and the llm
+      # tests (provider keys).
+      - name: Run tests with coverage
+        run: uv run --no-sync pytest --cov --cov-report=term
+      - name: Publish the coverage summary
+        run: uv run --no-sync coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+  docker:
+    name: Docker image and compose smoke test
+    needs: [quality, tests]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      # Index a single law: enough to prove the pipeline end to end, fast enough for CI.
+      INGEST_ARGS: "--law LGPD"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build the image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          tags: lexgraph:local
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Authenticated model downloads when the repository defines this secret.
+          secret-envs: hf_token=HF_TOKEN
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      # Without .env, as on a first run: no provider keys, and the default image has no reranker.
+      - name: Start Qdrant, index, then start the API and the UI
+        run: docker compose up --detach --no-build --wait --wait-timeout 600
+      # From the host, so the published ports and bind addresses are checked too.
+      - name: Check the API health
+        run: curl --fail --silent --show-error http://127.0.0.1:8000/health
+      - name: Check the service information
+        run: |
+          info=$(curl --fail --silent --show-error http://127.0.0.1:8000/v1/info)
+          echo "$info"
+          jq --exit-status \
+            '.indexed_chunks > 0 and .rerank_available == false and .models_configured == false' \
+            <<< "$info"
+      # Query-time embeddings and BM25 against the Qdrant server, without any language model.
+      - name: Search through the API
+        run: |
+          results=$(curl --fail --silent --show-error --get http://127.0.0.1:8000/v1/search \
+            --data-urlencode "q=tratamento de dados pessoais sensíveis" \
+            --data k=3 --data laws=LGPD)
+          echo "$results"
+          jq --exit-status 'length == 3 and all(.[]; .law_id == "LGPD")' <<< "$results"
+      - name: Check the UI health
+        run: curl --fail --silent --show-error http://127.0.0.1:8501/_stcore/health
+      # With the API URL and Host header the UI uses, which the API must accept.
+      - name: Check that the UI reaches the API
+        run: >-
+          docker compose exec -T ui python -c "import os, urllib.request;
+          urllib.request.urlopen(os.environ['LEXGRAPH_API_URL'] + '/v1/info', timeout=5)"
+      - name: Check that indexing again keeps the existing index
+        run: |
+          indexed_collection() {
+            curl --fail --silent --show-error http://127.0.0.1:6333/aliases |
+              jq --raw-output '.result.aliases[] | select(.alias_name == "lexgraph") | .collection_name'
+          }
+          before=$(indexed_collection)
+          docker compose run --rm --no-deps ingest
+          after=$(indexed_collection)
+          echo "Collection behind the alias: $before before, $after after"
+          [[ -n "$before" && "$before" == "$after" ]]
+      - name: Show service status and logs
+        if: failure()
+        run: |
+          docker compose ps --all
+          docker compose logs --no-color --timestamps
+      - name: Tear down
+        if: always()
+        run: docker compose down --volumes

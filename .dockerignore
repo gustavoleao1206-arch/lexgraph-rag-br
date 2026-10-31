@@ -1,0 +1,15 @@
+# Allowlist: only the files the Dockerfile copies reach the build context, so local data,
+# downloaded models, virtual environments, caches and secrets (.env) never do.
+# A new COPY in the Dockerfile needs a matching "!" entry here.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!LICENSE
+!src/
+!scripts/download_models.py
+!data/corpus/
+!.streamlit/
+
+**/__pycache__/
+**/*.py[cod]

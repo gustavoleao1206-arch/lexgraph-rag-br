@@ -1,0 +1,51 @@
+version: 2
+updates:
+  # Keeps the commit SHAs (and their version comments) in the workflows current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    # New releases wait a week before being proposed, a buffer against compromised ones.
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # Updates uv.lock, the single source of the tool versions (ruff and mypy run from it in CI
+  # and in the pre-commit hooks); minor and patch releases arrive together in one pull request.
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      python-minor-and-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # Base images of the Dockerfile: new digests of the Python image (security fixes) and new
+  # uv releases. tests/unit/devops/test_versions.py fails until UV_VERSION in ci.yml follows.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    ignore:
+      # Moving to another Python version is a deliberate change (.python-version, mypy).
+      - dependency-name: python
+        update-types: [version-update:semver-major, version-update:semver-minor]
+    groups:
+      docker-images:
+        patterns: ["*"]
+
+  # The Qdrant server of compose.yaml. qdrant-client (in uv.lock) supports servers within
+  # one minor version, which tests/unit/devops/test_versions.py checks.
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
