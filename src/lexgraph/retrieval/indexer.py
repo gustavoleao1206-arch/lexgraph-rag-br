@@ -18,6 +18,7 @@ from lexgraph.retrieval.store import (
     IndexMetadata,
     chunk_payload,
     create_collection,
+    drop_collection,
     new_collection_name,
     physical_collections,
     point_alias,
@@ -68,12 +69,12 @@ def index_chunks(
         _fill(client, collection, chunks, dense, sparse, batch_size, on_progress, metadata)
     except BaseException:
         if client.collection_exists(collection):
-            client.delete_collection(collection)
+            drop_collection(client, collection)
         raise
     point_alias(client, alias, collection)
     dropped = tuple(name for name in physical_collections(client, alias) if name != collection)
     for name in dropped:
-        client.delete_collection(name)
+        drop_collection(client, name)
     report = IndexReport(
         alias=alias,
         collection=collection,

@@ -1,14 +1,20 @@
 """Qdrant client creation, collection schema, payload layout, aliases and index metadata."""
 
+import gc
 import json
+import sqlite3
 import uuid
+import warnings
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import pytest
 from langchain_core.embeddings import DeterministicFakeEmbedding
 from pydantic import SecretStr
 from qdrant_client import QdrantClient, models
+from qdrant_client.local.persistence import CollectionPersistence
+from qdrant_client.local.qdrant_local import QdrantLocal
 
 from lexgraph.config import Settings
 from lexgraph.domain import Chunk
@@ -26,12 +32,14 @@ from lexgraph.retrieval.store import (
     content_hash,
     create_collection,
     create_qdrant_client,
+    drop_collection,
     encoder_fingerprint,
     new_collection_name,
     passage_from_payload,
     physical_collections,
     point_alias,
     point_id,
+    probe_sqlite_threading,
     read_index_metadata,
     resolve_alias,
 )
@@ -197,6 +205,53 @@ def test_physical_collections_belong_to_one_alias(client: QdrantClient) -> None:
         "lexgraph-20261029090000-2",
         "lexgraph-20261030120005",
     ]
+
+
+def test_sqlite_threading_is_probed_on_a_closed_connection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(CollectionPersistence, "CHECK_SAME_THREAD", None)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", ResourceWarning)
+        probe_sqlite_threading()
+        gc.collect()
+
+    assert isinstance(CollectionPersistence.CHECK_SAME_THREAD, bool)
+
+
+def test_sqlite_threading_probe_keeps_an_earlier_answer(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(CollectionPersistence, "CHECK_SAME_THREAD", True)
+
+    probe_sqlite_threading()
+
+    assert CollectionPersistence.CHECK_SAME_THREAD is True
+
+
+def test_drop_collection_closes_the_embedded_storage(tmp_path: Path) -> None:
+    embedded = QdrantClient(path=str(tmp_path))
+    create_collection(embedded, "lexgraph-20261030120005", dim=4)
+    local = embedded._client
+    assert isinstance(local, QdrantLocal)
+    storage = local.collections["lexgraph-20261030120005"].storage
+    assert storage is not None
+
+    drop_collection(embedded, "lexgraph-20261030120005")
+
+    assert not embedded.collection_exists("lexgraph-20261030120005")
+    with pytest.raises(sqlite3.ProgrammingError):
+        storage.storage.execute("SELECT 1")
+    # With the file closed, the folder can be removed on every platform.
+    assert not (tmp_path / "collection" / "lexgraph-20261030120005").exists()
+    embedded.close()
+
+
+def test_drop_collection_works_without_embedded_storage(client: QdrantClient) -> None:
+    create_collection(client, "other", dim=4)
+
+    drop_collection(client, "other")
+
+    assert not client.collection_exists("other")
 
 
 def test_point_alias_creates_and_moves_the_alias(client: QdrantClient) -> None:

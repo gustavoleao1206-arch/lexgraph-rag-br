@@ -19,14 +19,18 @@ another vector space and finds noise without any error, and a digest of the inde
 
 import hashlib
 import re
+import sqlite3
 import uuid
 import warnings
 from collections.abc import Iterable, Mapping, Sequence
+from contextlib import closing
 from datetime import UTC, datetime
 from typing import Any, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from qdrant_client import QdrantClient, models
+from qdrant_client.local.persistence import CollectionPersistence
+from qdrant_client.local.qdrant_local import QdrantLocal
 
 from lexgraph.config import Settings
 from lexgraph.domain import Chunk, Passage
@@ -101,6 +105,7 @@ def create_qdrant_client(settings: Settings) -> QdrantClient:
         api_key = settings.qdrant_api_key.get_secret_value() if settings.qdrant_api_key else None
         return QdrantClient(url=settings.qdrant_url, api_key=api_key)
     settings.qdrant_path.mkdir(parents=True, exist_ok=True)
+    probe_sqlite_threading()
     try:
         return QdrantClient(path=str(settings.qdrant_path))
     except RuntimeError as exc:
@@ -108,6 +113,23 @@ def create_qdrant_client(settings: Settings) -> QdrantClient:
             raise
         msg = f"embedded Qdrant at {settings.qdrant_path} is in use by another client or process"
         raise StorageLockedError(msg) from exc
+
+
+def probe_sqlite_threading() -> None:
+    """Answer embedded Qdrant's question about SQLite threading before it asks it.
+
+    The first embedded collection of a process checks whether SQLite connections may cross
+    threads through a throwaway connection that is never closed, which Python 3.13 reports
+    as an unclosed database. The same check runs here on a connection that is closed, and
+    its answer is recorded where embedded Qdrant looks for it.
+    """
+    if CollectionPersistence.CHECK_SAME_THREAD is not None:
+        return
+    with closing(sqlite3.connect(":memory:")) as connection:
+        (option,) = connection.execute(
+            "SELECT * FROM pragma_compile_options WHERE compile_options LIKE 'THREADSAFE=%'"
+        ).fetchone()
+    CollectionPersistence.CHECK_SAME_THREAD = option != "THREADSAFE=1"
 
 
 def create_collection(
@@ -215,6 +237,19 @@ def point_alias(client: QdrantClient, alias: str, collection: str) -> None:
         )
     )
     client.update_collection_aliases(change_aliases_operations=operations)
+
+
+def drop_collection(client: QdrantClient, name: str) -> None:
+    """Delete the physical collection ``name`` and its files.
+
+    Embedded Qdrant forgets a deleted collection without closing its SQLite storage: the file
+    stays open until garbage collection, so Windows cannot remove the folder (it is left
+    behind) and Python 3.13 warns about an unclosed database. The storage is closed first.
+    """
+    local = client._client
+    if isinstance(local, QdrantLocal) and (collection := local.collections.get(name)):
+        collection.close()
+    client.delete_collection(name)
 
 
 def collection_exists(client: QdrantClient, name: str) -> bool:
