@@ -16,7 +16,7 @@
 # The external images are pinned by digest, each named in a single FROM line, and Dependabot
 # keeps their tags and digests current. The syntax line at the top is not pinned: it follows
 # docker/dockerfile:1, the stable channel of the BuildKit frontend.
-FROM ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b981e1334471a90c4a1d93bb490 AS uv
 # Every stage builds on this image: the virtual environment built in one stage is copied to
 # another and must find its interpreter at the same path.
 FROM python:3.12-slim-trixie@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159 AS base
